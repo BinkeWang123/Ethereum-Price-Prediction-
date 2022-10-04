@@ -1,0 +1,71 @@
+
+!pip3 install yfinance
+!pip3 install prophet
+!pip3 install pandas
+
+# loading libraries 
+----------------------------------------------
+import pandas as pd
+import yfinance as yf
+from datetime import datetime
+from datetime import timedelta
+import plotly.graph_objects as go
+from prophet import Prophet
+from prophet.plot import plot_plotly, plot_components_plotly
+import warnings
+warnings.filterwarnings('ignore')
+pd.options.display.float_format = '${:,.2f}'.format
+
+#Getting the data
+----------------------------------------------
+today = datetime.today().strftime('%Y-%m-%d')
+start_date = '2017-01-01'
+ETH_df = yf.download('ETH-USD',start_date, today)
+ETH_df.tail(5)
+
+# Exploratory Data Analysis (EDA)
+----------------------------------------------
+
+ETH_df.info()
+ETH_df.isnull().sum()
+ETH_df.columns
+ETH_df.reset_index(inplace=True)
+ETH_df.columns 
+
+# new data fram
+
+df = ETH_df[["Date", "Open"]]
+new_names = {
+    "Date": "ds", 
+    "Open": "y",
+}
+df.rename(columns=new_names, inplace=True)
+
+df.tail()
+
+# plot the open price
+----------------------------------------------
+df = ETH_df[["Date", "Open"]]
+new_names = {
+    "Date": "ds", 
+    "Open": "y",
+}
+df.rename(columns=new_names, inplace=True)
+
+df.tail()
+
+# Build Prophet model
+----------------------------------------------
+m = Prophet(
+    seasonality_mode="multiplicative"
+)
+m.fit(df)
+
+future = m.make_future_dataframe(periods = 365)
+future.tail()
+
+forecast = m.predict(future)
+forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail()
+
+plot_plotly(m, forecast)
+plot_components_plotly(m, forecast)
